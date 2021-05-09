@@ -4,7 +4,7 @@ from PIL import Image
 from torchvision import transforms
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torch.load("efnet-b3-best.pth", map_location=device)
+model = torch.load("./models/efnet-b3-best.pth", map_location=device)
 model.eval()
 
 labels = ['Covid', 'Normal', 'Pneumonia']
