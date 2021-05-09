@@ -31,7 +31,7 @@ dataset_sizes={x: len(image_datasets[x]) for x in ["train","val"]}
  
 class_names=image_datasets["train"].classes
 print(class_names)
-"""
+
 num_classes=len(class_names)
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
  
@@ -74,9 +74,6 @@ def train_model(model, criterion, optimizer , num_epochs=50):
                 running_loss+=loss.item() * inputs.size(0)
                 running_corrects+=  torch.sum(preds==labels.data)
  
-            '''if phase == "train":
-              scheduler.step()'''
- 
             epoch_loss=running_loss/dataset_sizes[phase]
             epoch_acc=running_corrects.double()/dataset_sizes[phase]
  
@@ -109,4 +106,3 @@ optimizer=optim.Adam(model.parameters(),lr=1e-3)
 model_ft=train_model(model,criterion,optimizer,num_epochs=15)
  
 torch.save(model_ft,"./models/efnet-b3-last.pth")
-"""
