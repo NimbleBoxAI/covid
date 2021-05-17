@@ -2,16 +2,32 @@ import torch
 import streamlit as st
 from PIL import Image
 from torchvision import transforms
+import torch.nn as nn
+from efficientnet_pytorch import EfficientNet
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torch.load("./models/efnet-b3-best.pth", map_location=device)
-model.eval()
+class EffNet(nn.Module):
+    def __init__(self, img_size):
+        super(EffNet, self).__init__()
+        self.eff_net = EfficientNet.from_name('efficientnet-b5', in_channels=1, image_size = img_size, num_classes=3)
+        self.eff_net.set_swish(memory_efficient=False)
+    def forward(self, x):
+        x = self.eff_net(x)
+        x = torch.nn.functional.softmax(x, dim=1)
+        return x
 
+image_size = (456, 456)
+img_mean, img_std = [0.459], [0.347]
 labels = ['Covid', 'Normal', 'Pneumonia']
 
-tfms = transforms.Compose([transforms.Resize((224, 224)),
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = EffNet(image_size)
+model = torch.load("./models/efnet-b5-last.pth", map_location=device).module
+model.eval()
+
+tfms = transforms.Compose([transforms.Resize(image_size),
+                           transforms.Grayscale(num_output_channels=1),
                            transforms.ToTensor(),
-                           transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+                           transforms.Normalize(img_mean, img_std)])
 
 def inference(model, tfms, img):
   img = tfms(img)
