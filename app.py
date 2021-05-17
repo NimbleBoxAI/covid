@@ -2,16 +2,33 @@ import torch
 import streamlit as st
 from PIL import Image
 from torchvision import transforms
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torch.load("./models/efnet-b3-best.pth", map_location=device)
-model.eval()
+import torch.nn as nn
+from efficientnet_pytorch import EfficientNet
 
 labels = ['Covid', 'Normal', 'Pneumonia']
+img_mean, img_std = [0.459], [0.347]
+image_size = (456, 456)
 
-tfms = transforms.Compose([transforms.Resize((224, 224)),
-                           transforms.ToTensor(),
-                           transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+class EffNet(nn.Module):
+    def __init__(self, img_size):
+        super(EffNet, self).__init__()
+        self.eff_net = EfficientNet.from_name('efficientnet-b5', in_channels=1, image_size = img_size, num_classes=3)
+        self.eff_net.set_swish(memory_efficient=False)
+    def forward(self, x):
+        x = self.eff_net(x)
+        x = torch.nn.functional.softmax(x, dim=1)
+        return x
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = nn.DataParallel(EffNet(image_size))
+model.load_state_dict(torch.load("./models/efnet-b5.pth", map_location=device))
+model = model.to(device)
+model.eval()
+
+tfms = transforms.Compose([transforms.Resize(image_size),
+                                             transforms.Grayscale(num_output_channels=1),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize(img_mean, img_std)])
 
 def inference(model, tfms, img):
   img = tfms(img)
@@ -36,4 +53,3 @@ if len(img_list) != 0:
   st.text("Predicted Class: " + labels[torch.argmax(res)])
 else:
   st.text("Please Upload an image")
-  
