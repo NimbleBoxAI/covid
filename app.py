@@ -4,6 +4,7 @@ from PIL import Image
 from torchvision import transforms
 import torch.nn as nn
 from efficientnet_pytorch import EfficientNet
+<<<<<<< HEAD
 
 labels = ['Covid', 'Normal', 'Pneumonia']
 img_mean, img_std = [0.459], [0.347]
