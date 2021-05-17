@@ -4,7 +4,6 @@ from PIL import Image
 from torchvision import transforms
 import torch.nn as nn
 from efficientnet_pytorch import EfficientNet
-<<<<<<< HEAD
 
 labels = ['Covid', 'Normal', 'Pneumonia']
 img_mean, img_std = [0.459], [0.347]
@@ -22,7 +21,7 @@ class EffNet(nn.Module):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = nn.DataParallel(EffNet(image_size))
-model.load_state_dict(torch.load("./models/efnet-b5.pth", map_location=device))
+model.load_state_dict(torch.load("./models/efnet-b5-best.pth", map_location=device))
 model = model.to(device)
 model.eval()
 
