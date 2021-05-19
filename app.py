@@ -30,26 +30,32 @@ tfms = transforms.Compose([transforms.Resize(image_size),
                                              transforms.ToTensor(),
                                              transforms.Normalize(img_mean, img_std)])
 
-def inference(model, tfms, img):
-  img = tfms(img)
-  img = torch.unsqueeze(img, 0)
-  return model(img)
-
 st.title("Covid Identifier")
+st.write("""Upload your CT scans for prediction you can also upload multiple
+            CT scans to predict multiple results or combine them to improve
+            results.""")
+st.write("Use the below checkbox for that selection before uploading images")
 
-img_list = st.file_uploader("""Upload your CT scans for prediction
-                    You can also uplaod multiple CT scans to improve end results""",
-                  accept_multiple_files=True)
+combine = st.checkbox("Combine images for the result")
+img_list = st.file_uploader("Upload files here", accept_multiple_files=True)
 
 if len(img_list) != 0:
   res = 0
   bar = st.progress(0)
   for prog, st_img in enumerate(img_list):
     img = Image.open(st_img)
-    res += inference(model, tfms, img.convert('RGB'))
-    bar.progress(int(prog * 100/len(img_list)) + int(100/len(img_list)))
-   
-  res = res/len(img_list)
+    if combine:
+      img = tfms(img)
+      img = torch.unsqueeze(img, 0)
+      res += model(img)
+      bar.progress(int(prog * 100/len(img_list)) + int(100/len(img_list)))
+    else:
+      img = tfms(img)
+      img = torch.unsqueeze(img, 0)
+      res = model(img)
+      bar.progress(int(prog * 100/len(img_list)) + int(100/len(img_list)))
+      st.text(st_img.name + ": " + labels[torch.argmax(res)])
+  res /= len(img_list) 
   st.text("Predicted Class: " + labels[torch.argmax(res)])
 else:
   st.text("Please Upload an image")
