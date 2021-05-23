@@ -55,7 +55,8 @@ if len(img_list) != 0:
       res = model(img)
       bar.progress(int(prog * 100/len(img_list)) + int(100/len(img_list)))
       st.text(st_img.name + ": " + labels[torch.argmax(res)])
-  res /= len(img_list) 
-  st.text("Predicted Class: " + labels[torch.argmax(res)])
+  if combine:
+    res /= len(img_list) 
+    st.text("Predicted Class: " + labels[torch.argmax(res)])
 else:
   st.text("Please Upload an image")
