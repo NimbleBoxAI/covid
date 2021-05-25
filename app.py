@@ -1,8 +1,9 @@
 import torch 
-import streamlit as st
-from PIL import Image
-from torchvision import transforms
+from grad_cam import *
 import torch.nn as nn
+from PIL import Image
+import streamlit as st
+from torchvision import transforms
 from efficientnet_pytorch import EfficientNet
 
 labels = ['Covid', 'Normal', 'Pneumonia']
@@ -12,7 +13,8 @@ image_size = (456, 456)
 class EffNet(nn.Module):
     def __init__(self, img_size):
         super(EffNet, self).__init__()
-        self.eff_net = EfficientNet.from_name('efficientnet-b5', in_channels=1, image_size = img_size, num_classes=3)
+        self.eff_net = EfficientNet.from_name('efficientnet-b5', in_channels=1,
+            image_size = img_size, num_classes=3)
         self.eff_net.set_swish(memory_efficient=False)
     def forward(self, x):
         x = self.eff_net(x)
@@ -21,14 +23,24 @@ class EffNet(nn.Module):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = nn.DataParallel(EffNet(image_size))
-model.load_state_dict(torch.load("./models/efnet-b5-best.pth", map_location=device))
+model.load_state_dict(torch.load("./models/efnet-b5-best.pth",
+    map_location=device))
 model = model.to(device)
 model.eval()
+print(model)
+
+grad_cam = GradCam(model=model, blob_name = '_blocks',
+    target_layer_names=['38'], use_cuda=(True if device=="cuda" else False))
 
 tfms = transforms.Compose([transforms.Resize(image_size),
-                                             transforms.Grayscale(num_output_channels=1),
-                                             transforms.ToTensor(),
-                                             transforms.Normalize(img_mean, img_std)])
+                           transforms.Grayscale(num_output_channels=1),
+                           transforms.ToTensor(),
+                           transforms.Normalize(img_mean, img_std)])
+
+def process(img, tfms):
+  img = tfms(img)
+  img_tf = torch.unsqueeze(img, 0).to(device)
+  return img_tf
 
 st.title("Covid Identifier")
 st.write("""Upload your CT scans for prediction you can also upload multiple
@@ -45,14 +57,11 @@ if len(img_list) != 0:
   for prog, st_img in enumerate(img_list):
     img = Image.open(st_img)
     if combine:
-      img = tfms(img)
-      img = torch.unsqueeze(img, 0)
-      res += model(img)
+      
+      res += model(img_tf)
       bar.progress(int(prog * 100/len(img_list)) + int(100/len(img_list)))
     else:
-      img = tfms(img)
-      img = torch.unsqueeze(img, 0)
-      res = model(img)
+      res = model(img_tf)
       bar.progress(int(prog * 100/len(img_list)) + int(100/len(img_list)))
       st.text(st_img.name + ": " + labels[torch.argmax(res)])
   if combine:
