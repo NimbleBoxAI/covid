@@ -24,6 +24,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = nn.DataParallel(EffNet(image_size))
 model.load_state_dict(torch.load("./models/efnet-b5-best.pth",
     map_location=device))
+model = model.module
 model = model.to(device)
 model.eval()
 
