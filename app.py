@@ -9,22 +9,10 @@ labels = ['Covid', 'Normal', 'Pneumonia']
 img_mean, img_std = [0.459], [0.347]
 image_size = (456, 456)
 
-class EffNet(nn.Module):
-    def __init__(self, img_size):
-        super(EffNet, self).__init__()
-        self.eff_net = EfficientNet.from_name('efficientnet-b5', in_channels=1,
-            image_size = img_size, num_classes=3)
-        self.eff_net.set_swish(memory_efficient=False)
-    def forward(self, x):
-        x = self.eff_net(x)
-        x = torch.nn.functional.softmax(x, dim=1)
-        return x
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = nn.DataParallel(EffNet(image_size))
-model.load_state_dict(torch.load("./models/efnet-b5-best.pth",
-    map_location=device))
-model = model.module
+model = EfficientNet.from_name('efficientnet-b5', in_channels=1, image_size = image_size, num_classes=3)
+model.load_state_dict(torch.load("./models/model.pth", map_location=device))
 model = model.to(device)
 model.eval()
 

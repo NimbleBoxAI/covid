@@ -9,16 +9,6 @@ from efficientnet_pytorch import EfficientNet
 from tqdm import tqdm
 from sklearn.metrics import f1_score
 
-class EffNet(nn.Module):
-    def __init__(self, img_size):
-        super(EffNet, self).__init__()
-        self.eff_net = EfficientNet.from_name('efficientnet-b5', in_channels=1, image_size = img_size, num_classes=3)
-        self.eff_net.set_swish(memory_efficient=False)
-    def forward(self, x):
-        x = self.eff_net(x)
-        x = torch.nn.functional.softmax(x, dim=1)
-        return x
-
 image_size = (456, 456)
 img_mean, img_std = [0.459], [0.347]
 data_transforms={"train":transforms.Compose([transforms.Resize(image_size),
@@ -33,22 +23,21 @@ data_transforms={"train":transforms.Compose([transforms.Resize(image_size),
                                            ])
                 }
  
-data_dir=r"../covid-dataset"
+data_dir=r"./"
  
-image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir,x),data_transforms[x]) for x in ["train","test"]}
+image_datasets = datasets.ImageFolder(os.path.join(data_dir,"test"),data_transforms["test"])
 
 dataloaders={}
-dataloaders["train"]=torch.utils.data.DataLoader(image_datasets["train"], batch_size=1, shuffle=True) 
-dataloaders["test"]=torch.utils.data.DataLoader(image_datasets["test"], batch_size=40, shuffle=True) 
+dataloaders["test"]=torch.utils.data.DataLoader(image_datasets, batch_size=40, shuffle=True) 
 
-dataset_sizes={x: len(image_datasets[x]) for x in ["train","test"]}
+dataset_sizes=len(image_datasets)
  
-class_names=image_datasets["train"].classes
+class_names=image_datasets.classes
 
 nb_classes=len(class_names)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_ft = nn.DataParallel(EffNet(image_size))
-model_ft.load_state_dict(torch.load("./models/efnet-b5.pth", map_location=device))
+device = torch.device("cpu")
+model_ft = EfficientNet.from_name('efficientnet-b5', in_channels=1, image_size = image_size, num_classes=3)
+model_ft.load_state_dict(torch.load("./models/model.pth", map_location=device))
 model_ft = model_ft.to(device)
 model_ft.eval()
 
