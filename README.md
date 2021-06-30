@@ -1,4 +1,4 @@
-# covid
+# Covid detection
 
 Covid detection network trained on axial views of CT scan images.
 
@@ -9,3 +9,6 @@ Inside the cloned repository
 pip3 install -r requirements.txt
 streamlit run app.py 
 ```
+
+### Demo
+<img src = './showcase.gif'/>
