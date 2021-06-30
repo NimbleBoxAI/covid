@@ -35,9 +35,9 @@ st.write("""Covid detection network trained on axial views of CT scan images.
 
 st_img = st.file_uploader("Upload files here")
 if st_img != None:
-  img = Image.open(st_img).resize((456, 456))
+  img = Image.open(st_img).resize((456, 456)).convert('RGB')
   img.save('img.jpg')
-  img_tf = process(tfms, img.convert('RGB'))
+  img_tf = process(tfms, img)
   res = model(img_tf)
   target_index = torch.argmax(res[-1])
   img = np.array(img) / 255
