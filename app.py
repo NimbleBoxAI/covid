@@ -44,7 +44,7 @@ if st_img != None:
   img_tf = img_tf.requires_grad_(True)
   mask_dic = grad_cam(img_tf, target_index)
   show_cams(img, mask_dic)
-  gb_model = GuidedBackpropReLUModel(model=model, activation_layer_name = 'MemoryEfficientSwish', use_cuda=True)
+  gb_model = GuidedBackpropReLUModel(model=model, activation_layer_name = 'MemoryEfficientSwish', use_cuda=use_cuda)
   show_gbs(img_tf, gb_model, target_index, mask_dic)
   st.image(img)
   st.image('cam25.jpg')    
